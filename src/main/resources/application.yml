@@ -1,0 +1,66 @@
+server:
+  port: ${SERVER_PORT:8083}
+  error:
+    whitelabel:
+      enabled: false
+
+spring:
+  application:
+    name: ${APP_NAME:boilerplate}-${random.uuid}
+  datasource:
+    url: jdbc:postgresql://${SERVER_IP:localhost}:${POSTGRESQL_PORT:54321}/${POSTGRESQL_DB:boilerplate}?currentSchema=${POSTGRESQL_SCHEMA:public}
+    username: ${POSTGRESQL_USER:postgres}
+    password: ${POSTGRESQL_PASSWORD:senocak}
+    hikari:
+      minimum-idle: 0 # The minimum connection pool size is 0
+      maximum-pool-size: 40 # it can grow to at most 40 connections
+      max-lifetime: 900000 # to retire pooled connections after 10 minutes
+      transaction-isolation: TRANSACTION_READ_COMMITTED # to optimize the number of gap locks held by db when traversing the clustered index for bulk updates or deletes.
+      # auto-commit: false
+      pool-name: BoilerplateHikariCP
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        show_sql: true
+        globally_quoted_identifiers: true
+        format_sql: true
+        use_sql_comments: true
+        highlight_sql: true
+        session:
+          events:
+            log:
+              LOG_QUERIES_SLOWER_THAN_MS: ${LOG_QUERIES_SLOWER_THAN_MS:10}
+    hibernate:
+      ddl-auto: ${DDL_AUTO:update}
+  flyway:
+    locations: classpath:migration
+    placeholderReplacement: false
+    sql-migration-prefix: V
+    table: flyway_schema_history
+    enabled: true
+
+app:
+  jwtSecret: ${JWT_SECRET:sTvHbWsBDSCwW5ZnxpPEx7B5ad2Zx60p}
+  jwtExpirationInMs: '#{1 * 60 * 60}' # 1 hour in seconds
+
+logging:
+  level:
+    org:
+      hibernate:
+        SQL: ${HIBERNATE_SQL_LEVEL:error}
+      springframework: ${SPRING_LEVEL:info}
+
+springdoc:
+  show-actuator: true
+  api-docs:
+    path: /v1/swagger
+    version: OPENAPI_3_0
+
+decorator:
+  datasource:
+    datasource-proxy:
+      query:
+        enable-logging: true # Enable query logging
+        log-level: debug # Set the logging level for queries (DEBUG, INFO, etc.)
+      logging: slf4j # Specify the logging library (e.g., slf4j, jul, common, sysout)
