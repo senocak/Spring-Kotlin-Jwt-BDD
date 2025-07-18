@@ -9,7 +9,6 @@ import com.github.senocak.boilerplate.domain.User
 import com.github.senocak.boilerplate.domain.dto.UpdateUserDto
 import com.github.senocak.boilerplate.exception.RestExceptionHandler
 import com.github.senocak.boilerplate.exception.ServerException
-import com.github.senocak.boilerplate.repository.UserRepository
 import com.github.senocak.boilerplate.service.UserService
 import com.github.senocak.boilerplate.util.OmaErrorMessageType
 import com.github.senocak.boilerplate.util.RoleName
@@ -24,7 +23,7 @@ import org.mockito.kotlin.doReturn
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
-import org.springframework.test.context.bean.override.mockito.MockitoBean
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.RequestBuilder
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders
@@ -41,20 +40,19 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders
 class UserControllerIT {
     @Autowired private lateinit var userController: UserController
     @Autowired private lateinit var objectMapper: ObjectMapper
-    @Autowired private lateinit var userRepository: UserRepository
     @Autowired private lateinit var restExceptionHandler: RestExceptionHandler
-    @MockitoBean  private lateinit var userService: UserService
+    @MockitoSpyBean  private lateinit var userService: UserService
 
     private lateinit var mockMvc: MockMvc
     private lateinit var user: User
 
     @BeforeEach
-    @Throws(ServerException::class)
+    @Throws(exceptionClasses = [ServerException::class])
     fun beforeEach() {
         mockMvc = MockMvcBuilders.standaloneSetup(userController)
             .setControllerAdvice(restExceptionHandler)
             .build()
-        user = userRepository.findAll().first()
+        user = userService.findByUsername("asenocakUser")
         doReturn(value = user).`when`(userService).loggedInUser()
     }
 

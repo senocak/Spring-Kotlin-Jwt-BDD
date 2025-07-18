@@ -71,6 +71,7 @@ class UserService(private val userRepository: UserRepository): UserDetailsServic
      * @return -- User entity that is retrieved from db
      * @throws ServerException -- throws ServerException
      */
+    @Transactional(readOnly = true)
     @Throws(exceptionClasses = [ServerException::class])
     fun loggedInUser(): User? {
         val username = (SecurityContextHolder.getContext().authentication.principal as org.springframework.security.core.userdetails.User).username

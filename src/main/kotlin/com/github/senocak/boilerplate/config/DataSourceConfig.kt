@@ -32,11 +32,11 @@ class DataSourceConfig: DataSourceProperties() {
             .also { hds: HikariConfig ->
                 hds.dataSource = dataSource
                 hds.poolName = hikari.poolName ?: "SpringKotlinJPAHikariCP"
-                hds.minimumIdle = hikari.minimumIdle ?: 5
-                hds.maximumPoolSize = hikari.maximumPoolSize ?: 20
-                hds.maxLifetime = hikari.maxLifetime ?: 2_000_000
-                hds.idleTimeout = hikari.idleTimeout ?: 30_000
-                hds.connectionTimeout = hikari.connectionTimeout ?: 30_000
+                hds.minimumIdle = hikari.minimumIdle
+                hds.maximumPoolSize = hikari.maximumPoolSize
+                hds.maxLifetime = hikari.maxLifetime
+                hds.idleTimeout = hikari.idleTimeout
+                hds.connectionTimeout = hikari.connectionTimeout
                 hds.transactionIsolation = hikari.transactionIsolation ?: "TRANSACTION_READ_COMMITTED"
             }
         )

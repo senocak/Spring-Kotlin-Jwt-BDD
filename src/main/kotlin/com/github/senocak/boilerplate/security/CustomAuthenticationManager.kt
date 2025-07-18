@@ -27,7 +27,7 @@ class CustomAuthenticationManager(
     override fun authenticate(authentication: Authentication): Authentication {
         val user: User = userService.findByUsername(username = authentication.name)
         if (authentication.credentials != null){
-            val matches = passwordEncoder.matches(authentication.credentials.toString(), user!!.password)
+            val matches = passwordEncoder.matches(authentication.credentials.toString(), user.password)
             if (!matches) {
                 log.error("AuthenticationCredentialsNotFoundException occurred for ${user.name}")
                 throw AuthenticationCredentialsNotFoundException("Username or password invalid")
