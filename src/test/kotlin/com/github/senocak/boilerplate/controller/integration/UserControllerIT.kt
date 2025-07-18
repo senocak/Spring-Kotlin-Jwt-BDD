@@ -38,7 +38,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders
  */
 @SpringBootTestConfig
 @DisplayName(value = "Integration Tests for UserController")
-class UserControllerTest {
+class UserControllerIT {
     @Autowired private lateinit var userController: UserController
     @Autowired private lateinit var objectMapper: ObjectMapper
     @Autowired private lateinit var userRepository: UserRepository

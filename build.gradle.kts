@@ -71,4 +71,38 @@ allOpen {
 
 tasks.withType<Test> {
     useJUnitPlatform()
+    maxHeapSize = "1G"
+    if (project.hasProperty("skipTests")) {
+        val skipTestsValue: List<String> = project.property("skipTests")
+            .toString()
+            .split(",")
+            .map { it: String -> it.trim() }
+        when {
+            skipTestsValue.contains(element = "all") -> {
+                println(message = "Skipping all tests")
+                enabled = false
+            }
+            skipTestsValue.contains(element = "unit") && skipTestsValue.contains(element = "integration") -> {
+                println(message = "Skipping both unit and integration tests")
+                enabled = false
+            }
+            skipTestsValue.contains(element = "unit") -> {
+                println(message = "Skipping unit tests")
+                exclude("**/*Test.*")
+            }
+            skipTestsValue.contains(element = "integration") -> {
+                println(message = "Skipping integration tests")
+                exclude("**/*IT.*")
+            }
+            else -> println(message = "No valid skipTests value provided; running all tests")
+        }
+    }
+}
+
+tasks.register<Test>(name = "integrationTest") {
+    description = "Runs the integration tests"
+    group = "Verification"
+    include("**/*IT.*")
+    useJUnitPlatform()
+    maxHeapSize = "1G"
 }
