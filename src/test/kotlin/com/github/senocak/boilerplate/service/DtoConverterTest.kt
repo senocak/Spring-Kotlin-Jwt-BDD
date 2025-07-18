@@ -4,7 +4,7 @@ import com.github.senocak.boilerplate.domain.Role
 import com.github.senocak.boilerplate.domain.User
 import com.github.senocak.boilerplate.domain.dto.RoleResponse
 import com.github.senocak.boilerplate.domain.dto.UserResponse
-import com.github.senocak.boilerplate.factory.UserFactory.createUser
+import com.github.senocak.boilerplate.factory.createUser
 import com.github.senocak.boilerplate.util.RoleName
 import com.github.senocak.boilerplate.util.convertEntityToDto
 import org.junit.jupiter.api.DisplayName

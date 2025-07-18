@@ -26,7 +26,7 @@ class UserServiceTest {
     private val userRepository: UserRepository = mock()
     private var userService = UserService(userRepository = userRepository)
     private var auth: Authentication = mock()
-    private var user: User = mock()
+    private var user: org.springframework.security.core.userdetails.User = mock()
 
     @Test
     fun givenUsername_whenFindByUsername_thenAssertResult() {

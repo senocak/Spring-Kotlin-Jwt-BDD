@@ -142,6 +142,6 @@ class RestExceptionHandlerTest {
         assertEquals(expected = OmaErrorMessageType.NOT_FOUND.messageId, actual = exceptionDto.error!!.id)
         assertEquals(expected = OmaErrorMessageType.NOT_FOUND.text, actual = exceptionDto.error!!.text)
         assertEquals(expected = 1, actual = exceptionDto.variables.size)
-        assertEquals(expected = "No handler found for GET ", actual = exceptionDto.variables.first())
+        assertEquals(expected = "No endpoint GET .", actual = exceptionDto.variables.first())
     }
 }

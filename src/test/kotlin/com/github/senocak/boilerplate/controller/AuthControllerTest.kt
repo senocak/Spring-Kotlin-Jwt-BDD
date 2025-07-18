@@ -10,12 +10,13 @@ import com.github.senocak.boilerplate.domain.dto.LoginRequest
 import com.github.senocak.boilerplate.domain.dto.RegisterRequest
 import com.github.senocak.boilerplate.domain.dto.UserWrapperResponse
 import com.github.senocak.boilerplate.exception.ServerException
+import com.github.senocak.boilerplate.factory.createUser
 import com.github.senocak.boilerplate.security.JwtTokenProvider
 import com.github.senocak.boilerplate.service.RoleService
 import com.github.senocak.boilerplate.service.UserService
 import com.github.senocak.boilerplate.util.RoleName
-import com.github.senocak.boilerplate.factory.UserFactory
 import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
@@ -25,10 +26,10 @@ import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.api.function.Executable
 import org.mockito.ArgumentMatchers.anyList
 import org.mockito.InjectMocks
-import org.mockito.Mockito.mock
-import org.mockito.Mockito.doReturn
 import org.mockito.junit.jupiter.MockitoExtension
+import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.eq
+import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -44,17 +45,17 @@ import kotlin.test.assertNotNull
 @ExtendWith(value = [MockitoExtension::class])
 @DisplayName(value = "Unit Tests for AuthController")
 class AuthControllerTest {
-    @InjectMocks var authController: AuthController? = null
+    @InjectMocks lateinit var authController: AuthController
 
-    private val userService: UserService = mock(UserService::class.java)
-    private val roleService: RoleService = mock(RoleService::class.java)
-    private val tokenProvider: JwtTokenProvider = mock(JwtTokenProvider::class.java)
-    private val authenticationManager: AuthenticationManager = mock(AuthenticationManager::class.java)
-    private val authentication: Authentication = mock(Authentication::class.java)
-    private val passwordEncoder: PasswordEncoder = mock(PasswordEncoder::class.java)
-    private val bindingResult: BindingResult = mock(BindingResult::class.java)
+    private val userService: UserService = mock()
+    private val roleService: RoleService = mock()
+    private val tokenProvider: JwtTokenProvider = mock()
+    private val authenticationManager: AuthenticationManager = mock()
+    private val authentication: Authentication = mock()
+    private val passwordEncoder: PasswordEncoder = mock()
+    private val bindingResult: BindingResult = mock()
 
-    var user: User = UserFactory.createUser()
+    var user: User = createUser()
 
     @Nested
     internal inner class LoginTest {
@@ -66,7 +67,7 @@ class AuthControllerTest {
         }
 
         @Test
-        @Throws(ServerException::class)
+        @Throws(exceptionClasses = [ServerException::class])
         fun givenSuccessfulPath_whenLogin_thenReturn200() {
             // Given
             whenever(methodCall = authenticationManager.authenticate(UsernamePasswordAuthenticationToken(
@@ -75,7 +76,7 @@ class AuthControllerTest {
             val generatedToken = "generatedToken"
             whenever(methodCall = tokenProvider.generateJwtToken(subject = eq(value = user.username), roles = anyList())).thenReturn(generatedToken)
             // When
-            val response: UserWrapperResponse = authController!!.login(loginRequest = loginRequest, resultOfValidation = bindingResult)
+            val response: UserWrapperResponse = authController.login(loginRequest = loginRequest, resultOfValidation = bindingResult)
             // Then
             assertNotNull(actual = response)
             assertNotNull(actual = response.userResponse)
@@ -104,9 +105,9 @@ class AuthControllerTest {
             // Given
             whenever(methodCall = userService.existsByUsername(username = registerRequest.username!!)).thenReturn(true)
             // When
-            val closureToTest = Executable { authController!!.register(signUpRequest = registerRequest, resultOfValidation = bindingResult) }
+            val closureToTest = Executable { authController.register(signUpRequest = registerRequest, resultOfValidation = bindingResult) }
             // Then
-            Assertions.assertThrows(ServerException::class.java, closureToTest)
+            assertThrows(ServerException::class.java, closureToTest)
         }
 
         @Test
@@ -114,9 +115,9 @@ class AuthControllerTest {
             // Given
             whenever(methodCall = userService.existsByEmail(email = registerRequest.email!!)).thenReturn(true)
             // When
-            val closureToTest = Executable { authController!!.register(signUpRequest = registerRequest, resultOfValidation = bindingResult) }
+            val closureToTest = Executable { authController.register(signUpRequest = registerRequest, resultOfValidation = bindingResult) }
             // Then
-            Assertions.assertThrows(ServerException::class.java, closureToTest)
+            assertThrows(ServerException::class.java, closureToTest)
         }
 
         @Test
@@ -124,7 +125,7 @@ class AuthControllerTest {
             // Given
             whenever(methodCall = roleService.findByName(roleName = RoleName.ROLE_USER)).thenReturn(null)
             // When
-            val closureToTest = Executable { authController!!.register(signUpRequest = registerRequest, resultOfValidation = bindingResult) }
+            val closureToTest = Executable { authController.register(signUpRequest = registerRequest, resultOfValidation = bindingResult) }
             // Then
             Assertions.assertThrows(ServerException::class.java, closureToTest)
         }
@@ -132,11 +133,11 @@ class AuthControllerTest {
         @Test
         fun givenNotLogin_whenRegister_thenThrowServerException() {
             // Given
-            doReturn(Role()).`when`(roleService).findByName(RoleName.ROLE_USER)
+            doReturn(value = Role()).`when`(roleService).findByName(RoleName.ROLE_USER)
             // When
-            val closureToTest = Executable { authController!!.register(registerRequest, bindingResult!!) }
+            val closureToTest = Executable { authController.register(registerRequest, bindingResult) }
             // Then
-            Assertions.assertThrows(ServerException::class.java, closureToTest)
+            assertThrows(ServerException::class.java, closureToTest)
         }
 
         @Test
@@ -149,7 +150,7 @@ class AuthControllerTest {
             val generatedToken = "generatedToken"
             whenever(methodCall = tokenProvider.generateJwtToken(subject = eq(value = user.username), roles = anyList())).thenReturn(generatedToken)
             // When
-            val response: ResponseEntity<UserWrapperResponse> = authController!!.register(signUpRequest = registerRequest, resultOfValidation = bindingResult)
+            val response: ResponseEntity<UserWrapperResponse> = authController.register(signUpRequest = registerRequest, resultOfValidation = bindingResult)
             // Then
             assertNotNull(actual = response)
             assertNotNull(actual = response.body)

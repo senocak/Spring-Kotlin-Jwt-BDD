@@ -45,7 +45,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders
  */
 @SpringBootTestConfig
 @DisplayName(value = "Integration Tests for AuthController")
-class AuthControllerTest {
+class AuthControllerIT {
     @Autowired private lateinit var authController: AuthController
     @Autowired private lateinit var objectMapper: ObjectMapper
     @Autowired private lateinit var roleRepository: RoleRepository

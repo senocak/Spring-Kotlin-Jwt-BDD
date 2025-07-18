@@ -13,7 +13,7 @@ import org.testcontainers.containers.PostgreSQLContainer
 class PostgresqlInitializer: ApplicationContextInitializer<ConfigurableApplicationContext> {
     private val log: Logger by logger()
 
-    private val postgresContainer: PostgreSQLContainer<Nothing> = PostgreSQLContainer<Nothing>("postgres:latest").apply {
+    private val postgresContainer: PostgreSQLContainer<Nothing> = PostgreSQLContainer<Nothing>("postgres:14").apply {
         withDatabaseName("testdb")
         withUsername("test")
         withPassword("test")
@@ -26,7 +26,7 @@ class PostgresqlInitializer: ApplicationContextInitializer<ConfigurableApplicati
     }
 
     override fun initialize(configurableApplicationContext: ConfigurableApplicationContext) {
-        log.info("jdbc:postgresql://localhost:${postgresContainer.getMappedPort(1521)}/${postgresContainer.databaseName}?user=${postgresContainer.username}&password=${postgresContainer.password}&ssl=true")
+        log.info("jdbc:postgresql://localhost:${postgresContainer.firstMappedPort}/${postgresContainer.databaseName}?user=${postgresContainer.username}&password=${postgresContainer.password}&ssl=true")
         TestPropertyValues.of(
             "spring.datasource.url=" + postgresContainer.jdbcUrl,
             "spring.datasource.username=" + postgresContainer.username,

@@ -10,7 +10,10 @@ import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.api.function.Executable
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.doReturn
+import org.mockito.kotlin.doThrow
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.spy
+import org.mockito.kotlin.whenever
 import org.springframework.security.core.Authentication
 import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.core.authority.SimpleGrantedAuthority
@@ -26,7 +29,10 @@ import kotlin.test.assertTrue
 class AuthenticationServiceTest {
     private val authenticationService = AuthenticationService()
     var auth: Authentication = mock<Authentication>()
-    var user: User? = null
+    //val roleAdmin = SimpleGrantedAuthority("ROLE_ADMIN")
+    val roleAdmin: SimpleGrantedAuthority = mock()
+    val authorities: MutableList<GrantedAuthority> = arrayListOf(roleAdmin)
+    var user: User = User(TestConstants.USER_USERNAME, TestConstants.USER_PASSWORD, authorities)
 
     @BeforeEach
     fun initSecurityContext() {
@@ -42,13 +48,11 @@ class AuthenticationServiceTest {
     }
 
     @Test
-    @Throws(AccessDeniedException::class)
+    @Throws(exceptionClasses = [AccessDeniedException::class])
     fun givenWhenIsAuthorizedThenAssertResult() {
         // Given
-        val authorities: MutableList<GrantedAuthority> = ArrayList()
-        authorities.add(element = SimpleGrantedAuthority("ROLE_ADMIN"))
-        user = User(TestConstants.USER_USERNAME, TestConstants.USER_PASSWORD, authorities)
         doReturn(value = user).`when`(auth).principal
+        whenever(methodCall = roleAdmin.authority).thenReturn("ROLE_ADMIN")
         // When
         val preHandle: Boolean = authenticationService.isAuthorized(aInRoles = arrayOf("ADMIN"))
         // Then
@@ -56,16 +60,24 @@ class AuthenticationServiceTest {
     }
 
     @Test
-    @Throws(AccessDeniedException::class)
+    @Throws(exceptionClasses = [AccessDeniedException::class])
     fun givenNotValidRoleWhenIsAuthorizedThenAssertResult() {
         // Given
-        val authorities: MutableList<GrantedAuthority> = ArrayList()
-        authorities.add(element = SimpleGrantedAuthority("ROLE_ADMIN"))
-        user = User(TestConstants.USER_USERNAME, TestConstants.USER_PASSWORD, authorities)
         doReturn(value = user).`when`(auth).principal
         // When
         val preHandle: Boolean = authenticationService.isAuthorized(aInRoles = arrayOf("USER"))
         // Then
         assertFalse(actual = preHandle)
+    }
+
+    @Test
+    fun givenNullAuthenticationInRolesWhenIsAuthorizedThenThrowAccessDeniedException() {
+        // Given
+        doReturn(value = user).`when`(auth).principal
+        doThrow(toBeThrown = RuntimeException::class).`when`(roleAdmin).authority
+        // When
+        val closureToTest = Executable { authenticationService.isAuthorized(aInRoles = arrayOf("roleAdmin")) }
+        // Then
+        assertThrows(AccessDeniedException::class.java, closureToTest)
     }
 }

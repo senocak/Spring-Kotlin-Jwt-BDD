@@ -5,21 +5,21 @@ import com.github.senocak.boilerplate.domain.User
 import com.github.senocak.boilerplate.domain.dto.UpdateUserDto
 import com.github.senocak.boilerplate.domain.dto.UserWrapperResponse
 import com.github.senocak.boilerplate.exception.ServerException
+import com.github.senocak.boilerplate.factory.createUser
 import com.github.senocak.boilerplate.service.UserService
-import com.github.senocak.boilerplate.factory.UserFactory.createUser
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.api.function.Executable
-import org.mockito.Mockito
 import org.mockito.junit.jupiter.MockitoExtension
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.validation.BindingResult
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.doThrow
+import org.mockito.kotlin.mock
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
@@ -28,10 +28,10 @@ import kotlin.test.assertNull
 @ExtendWith(value = [MockitoExtension::class])
 @DisplayName(value = "Unit Tests for UserController")
 class UserControllerTest {
-    private val userService: UserService = Mockito.mock(UserService::class.java)
-    private val passwordEncoder: PasswordEncoder = Mockito.mock(PasswordEncoder::class.java)
+    private val userService: UserService = mock()
+    private val passwordEncoder: PasswordEncoder = mock()
     private var userController: UserController = UserController(userService, passwordEncoder)
-    private val bindingResult: BindingResult = Mockito.mock(BindingResult::class.java)
+    private val bindingResult: BindingResult = mock()
 
     @Nested
     internal inner class GetMeTest {

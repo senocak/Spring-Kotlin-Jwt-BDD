@@ -12,7 +12,11 @@ interface RoleRepository: PagingAndSortingRepository<Role, Long> {
 
 interface UserRepository: CrudRepository<User, String>, PagingAndSortingRepository<User, String> {
     fun findByEmail(email: String?): User?
-    fun findByUsername(username: String?): User?
+
+    @org.springframework.data.jpa.repository.Query("SELECT u FROM User u LEFT JOIN FETCH u.roles WHERE u.username = :username")
+    fun findByUsername(@org.springframework.data.repository.query.Param("username") username: String?): User?
+
     fun existsByUsername(username: String?): Boolean
+
     fun existsByEmail(email: String?): Boolean
 }
