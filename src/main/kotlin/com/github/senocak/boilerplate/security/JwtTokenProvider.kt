@@ -9,7 +9,6 @@ import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.MalformedJwtException
 import io.jsonwebtoken.UnsupportedJwtException
 import org.slf4j.Logger
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.security.access.AccessDeniedException
 import org.springframework.stereotype.Component
 import java.nio.charset.StandardCharsets
@@ -20,9 +19,7 @@ import javax.crypto.spec.SecretKeySpec
 
 @Component
 class JwtTokenProvider(
-    private val appProperties: AppProperties,
-    @Value("\${app.jwtSecret}") private val jwtSecret: String,
-    @Value("\${app.jwtExpirationInMs}") private val jwtExpirationInMs: String,
+    private val appProperties: AppProperties
 ){
     private val log: Logger by logger()
 
@@ -34,7 +31,7 @@ class JwtTokenProvider(
      * @return The generated JWT token.
      */
     fun generateJwtToken(subject: String, roles: List<String?>): String =
-        generateToken(subject = subject, roles = roles, expirationInMs = jwtExpirationInMs.toLong())
+        generateToken(subject = subject, roles = roles, expirationInMs = appProperties.jwtExpiration.toLong())
 
 
     /**
@@ -54,7 +51,7 @@ class JwtTokenProvider(
                     .claims(this)
                     .subject(subject)
                     .issuedAt(now)
-                    .expiration(Date(now.time + expirationInMs))
+                    .expiration(Date(now.time + expirationInMs * 1_000))
                     .signWith(getSignInKey())
                     .compact()
             }
@@ -64,13 +61,13 @@ class JwtTokenProvider(
      * @param token -- jwt token
      * @return -- expiration date
      */
-    @Throws(
+    @Throws(exceptionClasses = [
         ExpiredJwtException::class,
         UnsupportedJwtException::class,
         MalformedJwtException::class,
         io.jsonwebtoken.security.SignatureException::class,
         IllegalArgumentException::class
-    )
+    ])
     private fun getJwsClaims(token: String): Jws<Claims?> = Jwts.parser()
             .verifyWith(getSignInKey())
             .build()
@@ -130,7 +127,7 @@ class JwtTokenProvider(
      */
     private fun getSignInKey(): SecretKey {
         val bytes: ByteArray = Base64.getDecoder()
-            .decode(jwtSecret.toByteArray(charset = StandardCharsets.UTF_8))
+            .decode(appProperties.jwtSecret.toByteArray(charset = StandardCharsets.UTF_8))
         return SecretKeySpec(bytes, "HmacSHA256")
     }
 }

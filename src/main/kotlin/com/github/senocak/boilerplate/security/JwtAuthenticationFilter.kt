@@ -49,8 +49,8 @@ class JwtAuthenticationFilter(
         try {
             val bearerToken = request.getHeader(TOKEN_HEADER_NAME)
             if (StringUtils.hasText(bearerToken) && bearerToken.startsWith(prefix = TOKEN_PREFIX)) {
-                val jwt = bearerToken.substring(7)
-                tokenProvider.validateToken(jwt)
+                val jwt = bearerToken.substring(startIndex = 7)
+                tokenProvider.validateToken(token = jwt)
                 val userName: String = tokenProvider.getSubjectFromJWT(token = jwt)
                 val userDetails: UserDetails = userService.loadUserByUsername(username = userName)
                 val usernamePasswordAuthenticationToken = UsernamePasswordAuthenticationToken(

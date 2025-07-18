@@ -42,7 +42,7 @@ class UserService(private val userRepository: UserRepository): UserDetailsServic
      * @return -- User object
      * @throws UsernameNotFoundException -- throws UsernameNotFoundException
      */
-    @Throws(UsernameNotFoundException::class)
+    @Throws(exceptionClasses = [UsernameNotFoundException::class])
     fun findByEmail(email: String): User =
         userRepository.findByEmail(email = email) ?: throw UsernameNotFoundException("User not found with email")
 
@@ -58,7 +58,7 @@ class UserService(private val userRepository: UserRepository): UserDetailsServic
      * @return -- Spring User object
      */
     @Transactional
-    @Throws(UsernameNotFoundException::class)
+    @Throws(exceptionClasses = [UsernameNotFoundException::class])
     override fun loadUserByUsername(username: String): org.springframework.security.core.userdetails.User {
         val user: User = findByUsername(username = username)
         val authorities: List<GrantedAuthority> = user.roles
@@ -71,7 +71,7 @@ class UserService(private val userRepository: UserRepository): UserDetailsServic
      * @return -- User entity that is retrieved from db
      * @throws ServerException -- throws ServerException
      */
-    @Throws(ServerException::class)
+    @Throws(exceptionClasses = [ServerException::class])
     fun loggedInUser(): User? {
         val username = (SecurityContextHolder.getContext().authentication.principal as org.springframework.security.core.userdetails.User).username
         return findByUsername(username = username)

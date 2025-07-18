@@ -14,6 +14,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Component
+import org.springframework.transaction.annotation.Transactional
 
 @Component
 class CustomAuthenticationManager(
@@ -22,8 +23,9 @@ class CustomAuthenticationManager(
 ): AuthenticationManager {
     private val log: Logger by logger()
 
+    @Transactional
     override fun authenticate(authentication: Authentication): Authentication {
-        val user: User? = userService.findByUsername(authentication.name)
+        val user: User = userService.findByUsername(username = authentication.name)
         if (authentication.credentials != null){
             val matches = passwordEncoder.matches(authentication.credentials.toString(), user!!.password)
             if (!matches) {
@@ -33,7 +35,7 @@ class CustomAuthenticationManager(
         }
         val authorities: MutableCollection<SimpleGrantedAuthority> = ArrayList()
         authorities.add(element = SimpleGrantedAuthority(RoleName.ROLE_USER.role))
-        if (user!!.roles.any { r: Role -> r.name!! == RoleName.ROLE_ADMIN })
+        if (user.roles.any { r: Role -> r.name!! == RoleName.ROLE_ADMIN })
             authorities.add(element = SimpleGrantedAuthority(RoleName.ROLE_ADMIN.role))
 
         val loadUserByUsername = userService.loadUserByUsername(username = authentication.name)

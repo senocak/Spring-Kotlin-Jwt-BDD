@@ -26,11 +26,11 @@ class CustomErrorAttributes : DefaultErrorAttributes() {
             val omaErrorMessageType = OmaErrorMessageType.NOT_FOUND
             exceptionDto.statusCode = errorAttributes["status"] as Int
             exceptionDto.variables = arrayOf(errorAttributes["error"].toString(), errorAttributes["message"].toString())
-            exceptionDto.error = ExceptionDto.OmaErrorMessageTypeDto(omaErrorMessageType.messageId, omaErrorMessageType.text)
+            exceptionDto.error = ExceptionDto.OmaErrorMessageTypeDto(id = omaErrorMessageType.messageId, text = omaErrorMessageType.text)
         }
         val map: MutableMap<String, Any> = HashMap()
         map["exception"] = exceptionDto
-        log.debug("Exception occurred in DefaultErrorAttributes: $map")
+        log.error("Exception occurred in DefaultErrorAttributes: $map")
         return map
     }
 }

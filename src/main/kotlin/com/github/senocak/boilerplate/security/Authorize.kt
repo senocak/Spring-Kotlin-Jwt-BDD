@@ -1,9 +1,9 @@
 package com.github.senocak.boilerplate.security
 
-@Target(
+@Target(allowedTargets = [
     AnnotationTarget.ANNOTATION_CLASS,
     AnnotationTarget.CLASS,
     AnnotationTarget.FUNCTION
-)
-@Retention(AnnotationRetention.RUNTIME)
+])
+@Retention(value = AnnotationRetention.RUNTIME)
 annotation class Authorize(val roles: Array<String>)

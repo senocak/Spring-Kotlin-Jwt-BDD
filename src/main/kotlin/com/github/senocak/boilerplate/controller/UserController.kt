@@ -34,7 +34,7 @@ import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @Authorize(roles = [ADMIN, USER])
-@RequestMapping(UserController.URL)
+@RequestMapping(value = [UserController.URL])
 @Tag(name = "User", description = "User Controller")
 class UserController(
     private val userService: UserService,
@@ -42,13 +42,13 @@ class UserController(
 ): BaseController() {
     private val log: Logger by logger()
 
-    @Throws(ServerException::class)
+    @Throws(exceptionClasses = [ServerException::class])
     @Operation(summary = "Get me", tags = ["User"],
         responses = [
             ApiResponse(responseCode = "200", description = "successful operation",
-                content = arrayOf(Content(mediaType = "application/json", schema = Schema(implementation = UserWrapperResponse::class)))),
+                content = [Content(mediaType = "application/json", schema = Schema(implementation = UserWrapperResponse::class))]),
             ApiResponse(responseCode = "500", description = "internal server error occurred",
-                content = arrayOf(Content(mediaType = "application/json", schema = Schema(implementation = ExceptionDto::class))))
+                content = [Content(mediaType = "application/json", schema = Schema(implementation = ExceptionDto::class))])
         ],
         security = [SecurityRequirement(name = securitySchemeName, scopes = [ADMIN, USER])]
     )
@@ -62,13 +62,13 @@ class UserController(
     @Operation(summary = "Update user by username", tags = ["User"],
         responses = [
             ApiResponse(responseCode = "200", description = "successful operation",
-                content = arrayOf(Content(mediaType = "application/json", schema = Schema(implementation = HashMap::class)))),
+                content = [Content(mediaType = "application/json", schema = Schema(implementation = HashMap::class))]),
             ApiResponse(responseCode = "500", description = "internal server error occurred",
-                content = arrayOf(Content(mediaType = "application/json", schema = Schema(implementation = ExceptionDto::class))))
+                content = [Content(mediaType = "application/json", schema = Schema(implementation = ExceptionDto::class))])
         ],
         security = [SecurityRequirement(name = securitySchemeName, scopes = [ADMIN, USER])]
     )
-    @Throws(ServerException::class)
+    @Throws(exceptionClasses = [ServerException::class])
     fun patchMe(
         @Parameter(description = "Request body to update", required = true) @Validated @RequestBody userDto: UpdateUserDto,
         resultOfValidation: BindingResult

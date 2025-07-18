@@ -1,7 +1,7 @@
 package com.github.senocak.boilerplate.exception
 
+import com.fasterxml.jackson.databind.exc.MismatchedInputException
 import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException
-import com.fasterxml.jackson.module.kotlin.MissingKotlinParameterException
 import com.github.senocak.boilerplate.domain.dto.ExceptionDto
 import com.github.senocak.boilerplate.util.OmaErrorMessageType
 import com.github.senocak.boilerplate.util.logger
@@ -30,7 +30,7 @@ import kotlin.getValue
 class RestExceptionHandler {
     private val log: Logger by logger()
 
-    @ExceptionHandler(
+    @ExceptionHandler(value = [
         BadCredentialsException::class,
         ConstraintViolationException::class,
         InvalidParameterException::class,
@@ -38,64 +38,46 @@ class RestExceptionHandler {
         MissingPathVariableException::class,
         HttpMessageNotReadableException::class,
         MissingServletRequestParameterException::class,
-        MissingKotlinParameterException::class,
+        MismatchedInputException::class,
         UndeclaredThrowableException::class
-    )
-    fun handleBadRequestException(ex: Exception): ResponseEntity<Any> {
-        return generateResponseEntity(
-            HttpStatus.BAD_REQUEST,
-            OmaErrorMessageType.BASIC_INVALID_INPUT, arrayOf(ex.message)
-        )
-    }
+    ])
+    fun handleBadRequestException(ex: Exception): ResponseEntity<Any> =
+        generateResponseEntity(httpStatus = HttpStatus.BAD_REQUEST,
+            omaErrorMessageType = OmaErrorMessageType.BASIC_INVALID_INPUT, variables = arrayOf(ex.message))
 
-    @ExceptionHandler(
+    @ExceptionHandler(value = [
         AccessDeniedException::class,
         AuthenticationCredentialsNotFoundException::class,
         UnrecognizedPropertyException::class
-    )
-    fun handleUnAuthorized(ex: Exception): ResponseEntity<Any> {
-        return generateResponseEntity(
-            HttpStatus.UNAUTHORIZED,
-            OmaErrorMessageType.UNAUTHORIZED, arrayOf(ex.message)
-        )
-    }
+    ])
+    fun handleUnAuthorized(ex: Exception): ResponseEntity<Any> =
+        generateResponseEntity(httpStatus = HttpStatus.UNAUTHORIZED,
+            omaErrorMessageType = OmaErrorMessageType.UNAUTHORIZED, variables = arrayOf(ex.message))
 
-    @ExceptionHandler(HttpRequestMethodNotSupportedException::class)
-    fun handleHttpRequestMethodNotSupported(ex: HttpRequestMethodNotSupportedException): ResponseEntity<Any> {
-        return generateResponseEntity(
-            HttpStatus.METHOD_NOT_ALLOWED,
-            OmaErrorMessageType.EXTRA_INPUT_NOT_ALLOWED, arrayOf(ex.message)
-        )
-    }
+    @ExceptionHandler(value = [HttpRequestMethodNotSupportedException::class])
+    fun handleHttpRequestMethodNotSupported(ex: HttpRequestMethodNotSupportedException): ResponseEntity<Any> =
+        generateResponseEntity(httpStatus = HttpStatus.METHOD_NOT_ALLOWED,
+            omaErrorMessageType = OmaErrorMessageType.EXTRA_INPUT_NOT_ALLOWED, variables = arrayOf(ex.message))
 
-    @ExceptionHandler(HttpMediaTypeNotSupportedException::class)
-    fun handleHttpMediaTypeNotSupported(ex: HttpMediaTypeNotSupportedException): ResponseEntity<Any> {
-        return generateResponseEntity(
-            HttpStatus.UNSUPPORTED_MEDIA_TYPE,
-            OmaErrorMessageType.BASIC_INVALID_INPUT, arrayOf(ex.message)
-        )
-    }
+    @ExceptionHandler(value = [HttpMediaTypeNotSupportedException::class])
+    fun handleHttpMediaTypeNotSupported(ex: HttpMediaTypeNotSupportedException): ResponseEntity<Any> =
+        generateResponseEntity(httpStatus = HttpStatus.UNSUPPORTED_MEDIA_TYPE,
+            omaErrorMessageType = OmaErrorMessageType.BASIC_INVALID_INPUT, variables = arrayOf(ex.message))
 
-    @ExceptionHandler(NoHandlerFoundException::class, UsernameNotFoundException::class)
-    fun handleNoHandlerFoundException(ex: Exception): ResponseEntity<Any> {
-        return generateResponseEntity(
-            HttpStatus.NOT_FOUND,
-            OmaErrorMessageType.NOT_FOUND, arrayOf(ex.message)
-        )
-    }
+    @ExceptionHandler(value = [NoHandlerFoundException::class, UsernameNotFoundException::class])
+    fun handleNoHandlerFoundException(ex: Exception): ResponseEntity<Any> =
+        generateResponseEntity(httpStatus = HttpStatus.NOT_FOUND,
+            omaErrorMessageType = OmaErrorMessageType.NOT_FOUND, variables = arrayOf(ex.message))
 
-    @ExceptionHandler(ServerException::class)
-    fun handleServerException(ex: ServerException): ResponseEntity<Any> {
-        return generateResponseEntity(ex.statusCode, ex.omaErrorMessageType, ex.variables)
-    }
+    @ExceptionHandler(value = [ServerException::class])
+    fun handleServerException(ex: ServerException): ResponseEntity<Any> =
+        generateResponseEntity(httpStatus = ex.statusCode, omaErrorMessageType = ex.omaErrorMessageType,
+            variables = ex.variables)
 
-    @ExceptionHandler(Exception::class)
-    fun handleGeneralException(ex: Exception): ResponseEntity<Any> {
-        return generateResponseEntity(
-            HttpStatus.INTERNAL_SERVER_ERROR,
-            OmaErrorMessageType.GENERIC_SERVICE_ERROR, arrayOf(ex.message)
-        )
-    }
+    @ExceptionHandler(value = [Exception::class])
+    fun handleGeneralException(ex: Exception): ResponseEntity<Any> =
+        generateResponseEntity(httpStatus = HttpStatus.INTERNAL_SERVER_ERROR,
+            omaErrorMessageType = OmaErrorMessageType.GENERIC_SERVICE_ERROR, variables = arrayOf(ex.message))
 
     /**
      * @param httpStatus -- returned code
@@ -106,13 +88,12 @@ class RestExceptionHandler {
         omaErrorMessageType: OmaErrorMessageType,
         variables: Array<String?>
     ): ResponseEntity<Any> {
-        log.error("Exception is handled. HttpStatus: {}, OmaErrorMessageType: {}, variables: {}",
-            httpStatus, omaErrorMessageType, variables)
+        log.error("Exception is handled. HttpStatus: $httpStatus, OmaErrorMessageType: $omaErrorMessageType, variables: $variables")
         val exceptionDto = ExceptionDto()
         exceptionDto.statusCode = httpStatus.value()
         exceptionDto.error = ExceptionDto.OmaErrorMessageTypeDto(
-            omaErrorMessageType.messageId,
-            omaErrorMessageType.text
+            id = omaErrorMessageType.messageId,
+            text = omaErrorMessageType.text
         )
         exceptionDto.variables = variables
         return ResponseEntity.status(httpStatus).body(exceptionDto)

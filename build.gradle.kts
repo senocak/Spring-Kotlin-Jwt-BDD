@@ -1,9 +1,9 @@
 plugins {
-    kotlin("jvm") version "1.9.25"
-    kotlin("plugin.spring") version "1.9.25"
-    id("org.springframework.boot") version "3.5.3"
-    id("io.spring.dependency-management") version "1.1.7"
-    kotlin("plugin.jpa") version "1.9.25"
+    kotlin(module = "jvm") version "1.9.25"
+    kotlin(module = "plugin.spring") version "1.9.25"
+    id(id = "org.springframework.boot") version "3.5.3"
+    id(id = "io.spring.dependency-management") version "1.1.7"
+    kotlin(module = "plugin.jpa") version "1.9.25"
 }
 
 group = "com.github.senocak.boilerplate"
@@ -40,6 +40,7 @@ dependencies {
     implementation("io.jsonwebtoken:jjwt-impl:$jjwt")
     implementation("io.jsonwebtoken:jjwt-jackson:$jjwt")
     implementation("org.flywaydb:flyway-core")
+    implementation("org.flywaydb:flyway-database-postgresql")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
 
@@ -63,9 +64,9 @@ kotlin {
 }
 
 allOpen {
-    annotation("jakarta.persistence.Entity")
-    annotation("jakarta.persistence.MappedSuperclass")
-    annotation("jakarta.persistence.Embeddable")
+    annotation(fqName = "jakarta.persistence.Entity")
+    annotation(fqName = "jakarta.persistence.MappedSuperclass")
+    annotation(fqName = "jakarta.persistence.Embeddable")
 }
 
 tasks.withType<Test> {

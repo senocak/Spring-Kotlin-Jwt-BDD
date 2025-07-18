@@ -1,0 +1,63 @@
+@url = http://localhost:8084/api/v1
+
+### Register
+< {%
+    request.variables.set("email", "lorem" + $random.integer(1_000, 2_000) + "@ex.co")
+%}
+POST {{url}}/auth/register
+Content-Type: application/json
+
+{
+  "name": "{{email}}",
+  "username": "{{email}}",
+  "email": "{{email}}",
+  "password": "{{email}}"
+}
+
+> {%
+    client.global.set("token", response.body.token)
+%}
+
+### Login - Admin
+POST {{url}}/auth/login
+Content-Type: application/json
+
+{
+  "username": "asenocakAdmin",
+  "password": "asenocak"
+}
+
+> {%
+    client.global.set("token", response.body.token)
+%}
+
+### Login - User
+POST {{url}}/auth/login
+Content-Type: application/json
+
+{
+  "username": "asenocakUser",
+  "password": "asenocak"
+}
+
+> {%
+    client.global.set("token", response.body.token)
+%}
+
+###
+GET {{url}}/user/me
+Authorization: Bearer {{token}}
+
+###
+< {%
+    request.variables.set("email", "lorem" + $random.integer(1_000, 2_000) + "@ex.up")
+%}
+PATCH {{url}}/user/me
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "{{email}}",
+  "password": "{{email}}",
+  "password_confirmation": "{{email}}"
+}

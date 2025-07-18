@@ -17,7 +17,7 @@ class PostgresqlInitializer: ApplicationContextInitializer<ConfigurableApplicati
         withDatabaseName("testdb")
         withUsername("test")
         withPassword("test")
-        withInitScript("migration/V1__init.sql")
+        withInitScripts("migration/V1__init.sql", "migration/V2__populate.sql")
         withStartupTimeout(TestConstants.CONTAINER_WAIT_TIMEOUT)
     }
 

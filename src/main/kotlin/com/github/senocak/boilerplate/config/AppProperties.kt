@@ -5,5 +5,5 @@ import org.springframework.boot.context.properties.ConfigurationProperties
 @ConfigurationProperties(prefix = "app")
 data class AppProperties(
     var jwtSecret: String,
-    var jwtExpirationInMs: String
+    var jwtExpiration: String
 )

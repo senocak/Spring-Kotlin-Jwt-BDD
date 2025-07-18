@@ -58,10 +58,8 @@ class AppConfig(private val authorizationInterceptor: AuthorizationInterceptor):
     }
 
     override fun addViewControllers(registry: ViewControllerRegistry) {
-        registry
-            .addRedirectViewController("/", "/index.html")
-        registry
-            .addRedirectViewController("/swagger", "/swagger-ui/index.html")
+        registry.addRedirectViewController("/", "/index.html")
+        registry.addRedirectViewController("/swagger", "/swagger-ui/index.html")
     }
 
     /**
@@ -107,9 +105,9 @@ class AppConfig(private val authorizationInterceptor: AuthorizationInterceptor):
                     .bearerFormat("JWT")
             )
         ).info(Info()
-            .title("Blog Rest Api - Kotlin")
+            .title("Rest Api - Kotlin")
             .version(appVersion)
-            .description("Fully completed blog project written with Spring Boot")
+            .description("Fully completed jwt project written with Spring Boot")
             .termsOfService("https://github.com/senocak")
             .license(License().name("Apache 2.0").url("https://springdoc.org"))
         )

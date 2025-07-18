@@ -4,6 +4,7 @@ import com.github.senocak.boilerplate.controller.AuthController
 import com.github.senocak.boilerplate.controller.UserController
 import com.github.senocak.boilerplate.security.JwtAuthenticationEntryPoint
 import com.github.senocak.boilerplate.security.JwtAuthenticationFilter
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile
@@ -27,16 +28,16 @@ class WebSecurityConfig(
      */
     @Bean
     @Profile("!integration-test")
-    fun securityFilterChainDSL(http: HttpSecurity): SecurityFilterChain =
+    fun securityFilterChainDSL(http: HttpSecurity, @Value("\${springdoc.api-docs.path}") path: String): SecurityFilterChain =
         http {
             csrf { disable() }
             exceptionHandling { this.authenticationEntryPoint = unauthorizedHandler }
             httpBasic { disable() }
             authorizeHttpRequests {
-                authorize(pattern = "/actuator/**", access = permitAll)
                 authorize(pattern = "${AuthController.URL}/**", access = permitAll)
                 authorize(pattern = "${UserController.URL}/**", access = permitAll)
-                authorize(pattern = "/api/v1/swagger/**", access = permitAll)
+                authorize(pattern = "/actuator/**", access = permitAll)
+                authorize(pattern = "$path/**", access = permitAll)
                 authorize(pattern = "/swagger**/**", access = permitAll)
                 authorize(pattern = "/*.html", access = permitAll)
                 authorize(matches = anyRequest, access = authenticated)

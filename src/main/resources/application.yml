@@ -1,5 +1,5 @@
 server:
-  port: ${SERVER_PORT:8083}
+  port: ${SERVER_PORT:8084}
   error:
     whitelabel:
       enabled: false
@@ -41,15 +41,8 @@ spring:
     enabled: true
 
 app:
-  jwtSecret: ${JWT_SECRET:sTvHbWsBDSCwW5ZnxpPEx7B5ad2Zx60p}
-  jwtExpirationInMs: '#{1 * 60 * 60}' # 1 hour in seconds
-
-logging:
-  level:
-    org:
-      hibernate:
-        SQL: ${HIBERNATE_SQL_LEVEL:error}
-      springframework: ${SPRING_LEVEL:info}
+  jwtSecret: ${JWT_SECRET:sTvHbWsBDSCwW5ZnxpPEx7B5ad2Zx60psTvHbWsBDSCwW5ZnxpPEx7B5ad2Zx60p}
+  jwtExpiration: 3600 #1 * 60 * 60: 1 hour in seconds
 
 springdoc:
   show-actuator: true

@@ -31,13 +31,15 @@ class AuthorizationInterceptor(private val authenticationService: Authentication
         val handlerMethod: HandlerMethod = try {
             handler as HandlerMethod
         } catch (e: ClassCastException) {
+            log.warn("Handler is not a HandlerMethod, skipping authorization check: ${e.localizedMessage}")
             return true
         }
         validateQueryParams(request = request, handler = handlerMethod)
         val authorizeAnnotation: Authorize? = getAuthorizeAnnotation(handlerMethod = handlerMethod)
         if (authorizeAnnotation != null && !hasAnnotationRole(authorize = authorizeAnnotation)) {
-            log.error("Throwing AccessDeniedException because role is not valid for api")
-            throw AccessDeniedException("You are not allowed to perform this operation")
+            val p0 = "Throwing AccessDeniedException because role is not valid for api"
+            log.error(p0)
+            throw AccessDeniedException(p0)
         }
         return true
     }
@@ -74,15 +76,16 @@ class AuthorizationInterceptor(private val authenticationService: Authentication
      * @param handlerMethod -- RequestMapping method that reached to server
      * @return -- Authorize annotation or null
      */
-    private fun getAuthorizeAnnotation(handlerMethod: HandlerMethod): Authorize? {
-        if (handlerMethod.method.declaringClass.isAnnotationPresent(Authorize::class.java))
-            return handlerMethod.method.declaringClass.getAnnotation(Authorize::class.java)
-        if (handlerMethod.method.isAnnotationPresent(Authorize::class.java))
-            return handlerMethod.method.getAnnotation(Authorize::class.java)
-        if (handlerMethod.method.javaClass.isAnnotationPresent(Authorize::class.java))
-            return handlerMethod.method.javaClass.getAnnotation(Authorize::class.java)
-        return null
-    }
+    private fun getAuthorizeAnnotation(handlerMethod: HandlerMethod): Authorize? =
+        when {
+            handlerMethod.method.declaringClass.isAnnotationPresent(Authorize::class.java) ->
+                handlerMethod.method.declaringClass.getAnnotation(Authorize::class.java)
+            handlerMethod.method.isAnnotationPresent(Authorize::class.java) ->
+                handlerMethod.method.getAnnotation(Authorize::class.java)
+            handlerMethod.method.javaClass.isAnnotationPresent(Authorize::class.java) ->
+                handlerMethod.method.javaClass.getAnnotation(Authorize::class.java)
+            else -> null
+        }
 
     /**
      * Checks the roles of user for defined Authorize annotation
@@ -92,12 +95,11 @@ class AuthorizationInterceptor(private val authenticationService: Authentication
      * @throws AccessDeniedException -- throws AccessDeniedException
      */
     @Throws(BadCredentialsException::class, AccessDeniedException::class)
-    private fun hasAnnotationRole(authorize: Authorize): Boolean {
-        return try {
+    private fun hasAnnotationRole(authorize: Authorize): Boolean =
+        try {
             authenticationService.isAuthorized(aInRoles = authorize.roles)
         } catch (ex: Exception) {
             log.trace("Exception occurred while authorizing. Exception: ${ex.localizedMessage}")
             false
         }
-    }
 }

@@ -1,6 +1,5 @@
 package com.github.senocak.boilerplate
 
-import com.github.senocak.boilerplate.util.AppConstants
 import com.github.senocak.boilerplate.util.AppConstants.getLogger
 import org.springframework.boot.Banner
 import org.springframework.boot.autoconfigure.SpringBootApplication
@@ -25,9 +24,9 @@ fun main(args: Array<String>) {
         .bannerMode(Banner.Mode.CONSOLE)
         .logStartupInfo(true)
         .listeners(ApplicationListener {
-                event: ApplicationEvent -> getLogger().debug("#### event> " + event.javaClass.canonicalName)
+                event: ApplicationEvent -> getLogger().info("#### event> ${event.javaClass.canonicalName}")
         })
         .build()
         .run(*args)
-    AppConstants.setLevel("debug")
+    //AppConstants.setLevel("debug")
 }

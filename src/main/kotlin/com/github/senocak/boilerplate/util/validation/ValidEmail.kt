@@ -1,16 +1,15 @@
 package com.github.senocak.boilerplate.util.validation
 
+import com.github.senocak.boilerplate.util.logger
 import jakarta.validation.ConstraintValidator
 import jakarta.validation.ConstraintValidatorContext
 import org.slf4j.Logger
-import org.slf4j.LoggerFactory
-import java.util.regex.Matcher
 import java.util.regex.Pattern
 import jakarta.validation.Constraint
 import kotlin.reflect.KClass
 
-@Target(AnnotationTarget.FIELD)
-@Retention(AnnotationRetention.RUNTIME)
+@Target(allowedTargets = [AnnotationTarget.FIELD])
+@Retention(value = AnnotationRetention.RUNTIME)
 @Constraint(validatedBy = [EmailValidator::class])
 annotation class ValidEmail (
     val message: String = "Invalid email",
@@ -19,7 +18,7 @@ annotation class ValidEmail (
 )
 
 class EmailValidator: ConstraintValidator<ValidEmail?, String?> {
-    private val log: Logger = LoggerFactory.getLogger(this.javaClass)
+    private val log: Logger by logger()
 
     override fun initialize(constraintAnnotation: ValidEmail?) {
         log.info("EmailValidator initialized")
@@ -32,8 +31,9 @@ class EmailValidator: ConstraintValidator<ValidEmail?, String?> {
             "^[_A-Za-z0-9-+]" +
                     "(.[_A-Za-z0-9-]+)*@" + "[A-Za-z0-9-]+(.[A-Za-z0-9]+)*" + "(.[A-Za-z]{2,})$"
         )
-        val matcher: Matcher = pattern.matcher(email)
-        return matcher.matches()
+        return pattern
+            .matcher(email)
+            .matches()
     }
 }
 

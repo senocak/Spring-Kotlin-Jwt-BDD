@@ -18,7 +18,7 @@ class AuthenticationService {
      * @return  -- username or null
      * @throws AccessDeniedException -- if a user does not have required roles
      */
-    @Throws(AccessDeniedException::class)
+    @Throws(exceptionClasses = [AccessDeniedException::class])
     fun isAuthorized(aInRoles: Array<String>): Boolean {
         val getPrinciple = getPrinciple() ?: throw AccessDeniedException(authorizationFailed)
             .also { log.warn("AccessDeniedException occurred") }
@@ -48,7 +48,7 @@ class AuthenticationService {
                 authentication.principal as User
             } else null
         } catch (e: Exception) {
-            log.warn("Exception occurred, returning null")
+            log.warn("Exception occurred, returning null. ${e.localizedMessage}")
             null
         }
     }

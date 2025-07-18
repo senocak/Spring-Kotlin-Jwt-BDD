@@ -15,6 +15,7 @@ import com.github.senocak.boilerplate.service.UserService
 import com.github.senocak.boilerplate.util.OmaErrorMessageType
 import com.github.senocak.boilerplate.util.RoleName
 import com.github.senocak.boilerplate.util.convertEntityToDto
+import com.github.senocak.boilerplate.util.logger
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.media.Content
@@ -23,7 +24,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.authentication.AuthenticationManager
@@ -37,7 +37,7 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-@RequestMapping(AuthController.URL)
+@RequestMapping(value = [AuthController.URL])
 @Tag(name = "Authentication", description = "AUTH API")
 class AuthController(
     private val userService: UserService,
@@ -46,57 +46,57 @@ class AuthController(
     private val passwordEncoder: PasswordEncoder,
     private val authenticationManager: AuthenticationManager
 ): BaseController() {
-    private val log: Logger = LoggerFactory.getLogger(this.javaClass)
+    private val log: Logger by logger()
 
-    @PostMapping("/login")
+    @PostMapping(value = ["/login"])
     @Operation(summary = "Login Endpoint", tags = ["Authentication"])
     @ApiResponses(
         value = [
-            ApiResponse(responseCode = "201", description = "successful operation",
-                content = arrayOf(Content(mediaType = "application/json", schema = Schema(implementation = UserWrapperResponse::class)))),
+            ApiResponse(responseCode = "200", description = "successful operation",
+                content = [Content(mediaType = "application/json", schema = Schema(implementation = UserWrapperResponse::class))]),
             ApiResponse(responseCode = "400", description = "Bad credentials",
-                content = arrayOf(Content(mediaType = "application/json", schema = Schema(implementation = ExceptionDto::class)))),
+                content = [Content(mediaType = "application/json", schema = Schema(implementation = ExceptionDto::class))]),
             ApiResponse(responseCode = "500", description = "internal server error occurred",
-                content = arrayOf(Content(mediaType = "application/json", schema = Schema(implementation = ExceptionDto::class))))
+                content = [Content(mediaType = "application/json", schema = Schema(implementation = ExceptionDto::class))])
         ]
     )
-    @Throws(ServerException::class)
+    @Throws(exceptionClasses = [ServerException::class])
     fun login(
         @Parameter(description = "Request body to login", required = true) @Validated @RequestBody loginRequest: LoginRequest,
         resultOfValidation: BindingResult
     ): UserWrapperResponse {
-        validate(resultOfValidation)
+        validate(resultOfValidation = resultOfValidation)
         authenticationManager.authenticate(
             UsernamePasswordAuthenticationToken(loginRequest.username, loginRequest.password)
         )
         val user: User = userService.findByUsername(username = loginRequest.username!!)
         val login: UserResponse = user.convertEntityToDto()
-        return generateUserWrapperResponse(login)
+        return generateUserWrapperResponse(userResponse = login)
     }
 
-    @PostMapping("/register")
+    @PostMapping(value = ["/register"])
     @Operation(summary = "Register Endpoint", tags = ["Authentication"],
         responses = [
             ApiResponse(responseCode = "200", description = "successful operation",
-                content = arrayOf(Content(mediaType = "application/json", schema = Schema(implementation = UserWrapperResponse::class)))),
+                content = [Content(mediaType = "application/json", schema = Schema(implementation = UserWrapperResponse::class))]),
             ApiResponse(responseCode = "400", description = "Bad credentials",
-                content = arrayOf(Content(mediaType = "application/json", schema = Schema(implementation = ExceptionDto::class)))),
+                content = [Content(mediaType = "application/json", schema = Schema(implementation = ExceptionDto::class))]),
             ApiResponse(responseCode = "500", description = "internal server error occurred",
-                content = arrayOf(Content(mediaType = "application/json", schema = Schema(implementation = ExceptionDto::class))))
+                content = [Content(mediaType = "application/json", schema = Schema(implementation = ExceptionDto::class))])
         ]
     )
-    @Throws(ServerException::class)
+    @Throws(exceptionClasses = [ServerException::class])
     fun register(
         @Parameter(description = "Request body to register", required = true) @Validated @RequestBody signUpRequest: RegisterRequest,
         resultOfValidation: BindingResult
     ): ResponseEntity<UserWrapperResponse> {
-        validate(resultOfValidation)
+        validate(resultOfValidation = resultOfValidation)
         if (userService.existsByUsername(username = signUpRequest.username!!)) {
             log.error("Username:{} is already taken!", signUpRequest.username)
             throw ServerException(omaErrorMessageType = OmaErrorMessageType.JSON_SCHEMA_VALIDATOR,
                 variables = arrayOf("Username is already taken!"), statusCode = HttpStatus.BAD_REQUEST)
         }
-        if (userService.existsByEmail(signUpRequest.email!!)) {
+        if (userService.existsByEmail(email = signUpRequest.email!!)) {
             log.error("Email Address:{} is already taken!", signUpRequest.email)
             throw ServerException(omaErrorMessageType = OmaErrorMessageType.JSON_SCHEMA_VALIDATOR,
                 variables = arrayOf("Email Address already in use!"), statusCode = HttpStatus.BAD_REQUEST)
@@ -110,7 +110,7 @@ class AuthController(
         val result: User = userService.save(user)
         log.info("User created. User: {}", result)
         val `object`: UserWrapperResponse? = try {
-            login(LoginRequest(signUpRequest.username, signUpRequest.password), resultOfValidation)
+            login(LoginRequest(username = signUpRequest.username, password = signUpRequest.password), resultOfValidation)
         } catch (e: Exception) {
             throw ServerException(omaErrorMessageType = OmaErrorMessageType.GENERIC_SERVICE_ERROR,
                 variables = arrayOf("Error occurred for generating jwt attempt", HttpStatus.INTERNAL_SERVER_ERROR.toString()),
