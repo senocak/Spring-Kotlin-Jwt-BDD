@@ -1,9 +1,7 @@
 package com.github.senocak.boilerplate.stepdefs
 
-import com.github.senocak.boilerplate.config.CucumberBase
 import io.cucumber.java.Before
 import io.cucumber.java.en.Then
-import io.cucumber.java.en.When
 import org.springframework.http.HttpStatusCode
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
