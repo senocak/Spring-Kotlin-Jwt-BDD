@@ -1,4 +1,4 @@
-# Cucumber Integration Testing in Spring Boot Kotlin JWT Application
+# 🥒 Cucumber Integration Testing in Spring Boot Kotlin JWT Application
 
 This guide demonstrates how to implement robust Behavior-Driven Development (BDD) integration tests using Cucumber in a Spring Boot Kotlin application with JWT authentication. The setup leverages Testcontainers for database isolation and provides a clean, maintainable testing architecture.
 
@@ -29,51 +29,100 @@ src/test/
 │       └── Auth.feature                   # Gherkin feature files
 ```
 
-## 🔧 Configuration Deep Dive
+## 💡 How It Works: Complete End-to-End Example
 
-### Test Configuration (`CucumberTestConfig.kt`)
+Let's walk through the complete flow of how Cucumber integration testing works in this project:
 
-The configuration uses several key annotations:
-
-- `@CucumberContextConfiguration` - Integrates Cucumber with Spring Boot
-- `@SpringBootTest(webEnvironment = RANDOM_PORT)` - Starts embedded server
-- `@ContextConfiguration(initializers = [PostgresqlInitializer::class])` - Database setup
-- `@ActiveProfiles("cucumber-test")` - Uses test-specific configuration
-- `@Transactional(propagation = NOT_SUPPORTED)` - Prevents transaction rollback
-
-### Database Setup with Testcontainers
-
-The `PostgresqlInitializer` configures a containerized PostgreSQL instance:
-
-```kotlin
-@ContextConfiguration(initializers = [PostgresqlInitializer::class])
-```
-
-This ensures each test run uses a fresh, isolated database instance.
-
-## 📝 Writing Feature Files
-
-Feature files are written in Gherkin syntax and stored in `src/test/resources/features/`:
+### 1️⃣ Writing Feature Files
+Feature files are written in Gherkin syntax to describe test scenarios in plain English. This makes them readable by non-technical stakeholders while providing structure for test automation. They are stored in `src/test/resources/features/`:
 
 ```gherkin
-Feature: The health of the application can be checked
+Feature: Feature: User Authentication
   Scenario: client makes call to POST to login
     When the client calls "/login" with username "asenocakAdmin" and password "asenocak" and cast to "com.github.senocak.boilerplate.domain.dto.UserWrapperResponse"
     Then the client receives status code of 200
     Then response has field "token"
 ```
+This feature file describes a scenario where:
+1. A client sends login credentials to the `/login` endpoint
+2. We expect a 200 OK response
+3. The response should contain a JWT token
 
-### Key Benefits of This Approach:
-- **Readable scenarios** that non-technical team members can understand
-- **Parameterized steps** for flexible test data
-- **Response validation** with type casting
-- **Field-level assertions** on JSON responses
+### 2️⃣ Setting Up the Test Infrastructure
 
-## 🔨 Step Definitions Architecture
+#### Cucumber Test Configuration
 
-### Base Class (`CucumberBase.kt`)
+The `CucumberTestConfig.kt` annotation consolidates all the necessary configuration for our tests:
 
-Provides reusable HTTP client functionality:
+```kotlin
+@Tag(value = "cucumber")
+@Target(allowedTargets = [AnnotationTarget.ANNOTATION_CLASS, AnnotationTarget.CLASS])
+@Retention(value = AnnotationRetention.RUNTIME)
+@ActiveProfiles(value = ["cucumber-test"])
+@TestClassOrder(value = ClassOrderer.OrderAnnotation::class)
+@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
+@Transactional(propagation = Propagation.NOT_SUPPORTED)
+@ContextConfiguration(initializers = [
+    PostgresqlInitializer::class,
+])
+@TestPropertySource(value = ["/application-cucumber-test.yml"])
+@Suite
+@CucumberContextConfiguration
+@IncludeEngines(value = ["cucumber"])
+@SelectClasspathResource(value = "features")
+@ConfigurationParameter(key = GLUE_PROPERTY_NAME, value = "com.github.senocak.boilerplate.stepdefs")
+@ConfigurationParameter(key = PLUGIN_PROPERTY_NAME, value = "pretty")
+annotation class CucumberTestConfig
+```
+
+Key annotations:
+- **`@ActiveProfiles("cucumber-test")`** - Uses a dedicated test profile
+- **`@SpringBootTest(webEnvironment = RANDOM_PORT)`** - Starts the full application with a random port
+- **`@ContextConfiguration(initializers = [PostgresqlInitializer::class])`** - Sets up a test database
+- **`@SelectClasspathResource("features")`** - Locates Gherkin feature files
+- **`@ConfigurationParameter(key = GLUE_PROPERTY_NAME, value = "com.github.senocak.boilerplate.stepdefs")`** - Connects feature files to step definitions
+- **`@CucumberContextConfiguration`** - Integrates Cucumber with Spring Boot
+- **`@Transactional(propagation = NOT_SUPPORTED)`** - Prevents transaction rollback
+
+#### Database Setup with Testcontainers
+
+The `PostgresqlInitializer.kt` class creates and initializes an isolated PostgreSQL container:
+
+```kotlin
+@TestConfiguration
+class PostgresqlInitializer: ApplicationContextInitializer<ConfigurableApplicationContext> {
+    private val postgresContainer: PostgreSQLContainer<Nothing> = PostgreSQLContainer<Nothing>("postgres:14").apply {
+        withDatabaseName("testdb")
+        withUsername("test")
+        withPassword("test")
+        withInitScripts("migration/V1__init.sql", "migration/V2__populate.sql")
+        withStartupTimeout(TestConstants.CONTAINER_WAIT_TIMEOUT)
+    }
+
+    init {
+        postgresContainer.start()
+    }
+
+    override fun initialize(configurableApplicationContext: ConfigurableApplicationContext) {
+        TestPropertyValues.of(
+            "spring.datasource.url=" + postgresContainer.jdbcUrl,
+            "spring.datasource.username=" + postgresContainer.username,
+            "spring.datasource.password=" + postgresContainer.password
+        ).applyTo(configurableApplicationContext.environment)
+    }
+}
+```
+
+This provides:
+- A fresh database for each test run
+- Isolation from development or production environments
+- Execution of migration scripts for schema and test data
+
+### 3️⃣ Building the Testing Foundation
+
+#### Base Class (`CucumberBase.kt`)
+
+The `CucumberBase` class provides the core HTTP testing functionality:
 
 ```kotlin
 @CucumberTestConfig
@@ -81,29 +130,56 @@ open class CucumberBase {
     @LocalServerPort protected var localPort: Int = 0
     @Autowired protected lateinit var objectMapper: ObjectMapper
     @Autowired protected lateinit var restTemplateBuilder: RestTemplateBuilder
-    
     protected lateinit var restTemplate: RestTemplate
     protected lateinit var latestResponse: ResponseResults
+    val headers: MutableMap<String, String> = hashMapOf("Accept" to "application/json")
+    
+    // HTTP request methods (GET, POST, PUT, DELETE)
+    // Response handling and parsing
 }
 ```
 
 **Key Features:**
 - **Dynamic port injection** with `@LocalServerPort`
-- **Jackson integration** for JSON parsing
+- **Jackson integration** for JSON parsing with `ObjectMapper`
 - **RestTemplate configuration** for HTTP requests
 - **Response caching** for step-to-step data sharing
 - **Custom error handling** with `ResponseResultErrorHandler`
+- **Request headers** management
 
-### HTTP Request Methods
+#### HTTP Request Methods
 
 The base class provides methods for all HTTP verbs:
 
+```kotlin
+@Throws(exceptionClasses = [IOException::class])
+fun executePost(url: String, entries: MutableMap<String, Any>, classToCast: Class<*>) {
+    headers.put("Content-Type", "application/json")
+    val requestCallback = HeaderSettingRequestCallback(requestHeaders = headers)
+    requestCallback.setBody(JSONObject(entries).toString())
+    val errorHandler = ResponseResultErrorHandler()
+    restTemplate.setErrorHandler(errorHandler)
+    latestResponse = restTemplate.execute(url, HttpMethod.POST, requestCallback,
+        { response: ClientHttpResponse ->
+            when {
+                errorHandler.hadError -> errorHandler.results
+                else -> ResponseResults(theResponse = response, classToCast = classToCast)
+            }
+        }) ?: throw IOException("Response was null for URL: $url")
+}
+```
 - `executeGet(url: String)` - GET requests
 - `executePost(url, entries, classToCast)` - POST with JSON body
 - `executePut(url, entries)` - PUT requests
 - `executeDelete(url)` - DELETE requests
 
-### Custom Error Handling
+These methods:
+- Set appropriate headers
+- Marshal request bodies to JSON
+- Handle error responses
+- Parse and store the response for assertions
+
+#### Custom Error Handling
 
 ```kotlin
 class ResponseResultErrorHandler: ResponseErrorHandler {
@@ -116,71 +192,179 @@ class ResponseResultErrorHandler: ResponseErrorHandler {
     }
 }
 ```
-
 This captures both successful and error responses for comprehensive testing.
 
-## 🔐 Authentication Step Implementation
+#### Custom Response Handling
 
-### Step Definitions (`AuthSteps.kt`)
+The `ResponseResults` class captures and processes HTTP responses:
+```kotlin
+class ResponseResults internal constructor(
+    val theResponse: ClientHttpResponse,
+    val classToCast: Class<*>? = null,
+) {
+    var body: String = toString(inputStream = theResponse.body)
+
+    private fun toString(inputStream: InputStream): String {
+        val reader = BufferedReader(inputStream.reader())
+        val content = StringBuilder()
+        try {
+            var line = reader.readLine()
+            while (line != null) {
+                content.append(line)
+                line = reader.readLine()
+            }
+        } finally {
+            reader.close()
+        }
+        return content.toString()
+    }
+}
+```
+
+This class:
+- Stores the raw HTTP response
+- Reads the response body into a string
+- Optionally casts the response to a specific class for type-safe assertions
+
+#### Key Benefits of This Approach:
+- **Readable scenarios** that non-technical team members can understand
+- **Parameterized steps** for flexible test data
+- **Response validation** with type casting
+- **Field-level assertions** on JSON responses
+
+### 4️⃣ Implementing Step Definitions
+
+Step definitions connect the Gherkin language in feature files to executable Kotlin code:
 
 ```kotlin
 class AuthSteps: CucumberBase() {
     @Before
     fun setup() {
-        restTemplate = restTemplateBuilder
-            .rootUri("http://localhost:$localPort/api/v1/auth")
-            .build()
+        restTemplate = restTemplateBuilder.rootUri("http://localhost:$localPort/api/v1/auth").build()
     }
-    
-    @Then("the client calls {string} with username {string} and password {string} and cast to {string}")
-    fun theClientCallsWithCredentialsAndCastsToClass(
-        url: String, 
-        username: String, 
-        password: String, 
-        classToCast: String
-    ) {
+
+    @Then(value = "the client calls {string} with username {string} and password {string} and cast to {string}")
+    fun theClientCallsWithCredentialsAndCastsToClass(url: String, username: String, password: String, classToCast: String) {
         executePost(
             url = url,
             entries = mutableMapOf("username" to username, "password" to password),
             classToCast = Class.forName(classToCast) as Class<*>
         )
     }
+
+    @Then(value = "^the client receives status code of (\\d+)$")
+    fun theClientReceivesStatusCode(statusCode: Int) {
+        val currentStatusCode: HttpStatusCode = latestResponse.theResponse.statusCode
+        assertEquals(expected = statusCode.toLong(), actual = currentStatusCode.value().toLong())
+    }
+
+    @Then(value = "response has field {string}")
+    fun responseHasField(field: String) {
+        val readTree = objectMapper.readTree(latestResponse.body)
+        assertTrue { readTree.get(field) != null }
+    }
 }
 ```
 
-**Implementation Highlights:**
+Key aspects of step definitions:
 - **Dynamic base URI** construction using injected port
-- **Flexible credentials** passed as step parameters  
-- **Type-safe response casting** using reflection
-- **Reusable HTTP logic** from base class
+- **`@Before` hook** configures the test environment
+- **Parameterized step patterns** with regex capture groups
+- **Method implementation** that executes HTTP requests
+- **Assertions** validate response codes and content
+- **Type-safe casting** for response objects
 
-## 🚀 Running the Tests
+### 5️⃣ Test Execution Flow Visualization
+Here's a diagram illustrating the flow of test execution:
 
-### Execute All Tests
+```
+┌────────────────┐     ┌─────────────────┐     ┌───────────────────┐
+│                │     │                 │     │                   │
+│  Auth.feature  ├────▶│  AuthSteps.kt   ├────▶│   CucumberBase    │
+│                │     │                 │     │                   │
+└────────────────┘     └─────────────────┘     └─────────┬─────────┘
+                                                         │
+┌────────────────┐     ┌─────────────────┐     ┌─────────▼─────────┐
+│                │     │                 │     │                   │
+│ Spring Context │◀────┤ PostgreSQL      │◀────┤   REST Template   │
+│                │     │ (Testcontainers)│     │                   │
+└────────────────┘     └─────────────────┘     └───────────────────┘
+```
+
+#### 🔧 Gradle Setup for Testing
+The `build.gradle.kts` file includes specific configurations for running Cucumber tests:
+
+```kotlin
+dependencies {
+    // Other dependencies...
+    testImplementation("org.junit.platform:junit-platform-suite")
+    testImplementation("io.cucumber:cucumber-java:7.23.0")
+    testImplementation("io.cucumber:cucumber-junit-platform-engine:7.23.0")
+    testImplementation("io.cucumber:cucumber-spring:7.23.0")
+    testImplementation("org.testcontainers:testcontainers:1.21.3")
+    testImplementation("org.testcontainers:junit-jupiter:1.21.3")
+    testImplementation("org.testcontainers:postgresql:1.21.3")
+}
+
+tasks.withType<Test> {
+    systemProperty("cucumber.junit-platform.naming-strategy", "long")
+    // ...
+}
+
+tasks.register<Test>(name = "integrationTest") {
+    description = "Runs the integration tests"
+    group = "Verification"
+    include("**/*IT.*")
+    useJUnitPlatform()
+}
+```
+
+Key configuration elements:
+- **Cucumber dependencies** for BDD testing
+- **JUnit platform** integration
+- **Testcontainers** for database isolation
+- **Task configuration** for specific test types
+
+#### 🧪 Command Line Execution
+
 ```bash
+# Run all tests including Cucumber
 ./gradlew test
-```
 
-### Run Only Integration Tests  
-```bash
+# Run only integration tests
 ./gradlew integrationTest
-```
 
-### Run with Specific Profiles
-```bash
-./gradlew test -Dspring.profiles.active=cucumber-test
-```
-
-### Skip Specific Test Types
-```bash
-# Skip integration tests only
+# Skip specific test types
 ./gradlew test -PskipTests=integration
+./gradlew test -Dspring.profiles.active=cucumber-test
 
 # Skip all tests  
 ./gradlew test -PskipTests=all
 ```
 
-## 📊 Test Execution Flow
+#### Debugging Tips
+
+1. **View Cucumber output** with the `pretty` formatter:
+   ```kotlin
+   @ConfigurationParameter(key = PLUGIN_PROPERTY_NAME, value = "pretty")
+   ```
+
+2. **Inspect HTTP requests/responses** by adding debug logs:
+   ```kotlin
+   private val log: Logger by logger()
+   log.debug("Request body: ${requestCallback.body}")
+   ```
+
+3. **Use explicit assertions** for clear failure messages:
+   ```kotlin
+   assertEquals(
+       expected = statusCode.toLong(), 
+       actual = currentStatusCode.value().toLong(),
+       message = "Expected status ${statusCode} but got ${currentStatusCode.value()}"
+   )
+   ```
+
+## 🔍 Execution Flow
 
 1. **Container Startup** - PostgreSQL container initializes
 2. **Spring Context** - Application starts with random port  
@@ -216,48 +400,46 @@ class AuthSteps: CucumberBase() {
 - Flyway disabled for faster startup
 - Environment-specific properties
 
-## 🔍 Advanced Features
-
-### Response Validation Chain
-```gherkin
-When the client calls "/login" with credentials
-Then the client receives status code of 200  
-And response has field "token"
-And response has field "user.username"
-```
-
-### Custom Request Headers
-```kotlin
-val headers: MutableMap<String, String> = hashMapOf(
-    "Accept" to "application/json",
-    "Content-Type" to "application/json"
-)
-```
-
-### Type-Safe Response Casting
-```kotlin
-executePost(
-    url = "/login",
-    entries = credentials,
-    classToCast = UserWrapperResponse::class.java
-)
-```
-
 ## 🎉 Benefits of This Architecture
 
-- **Maintainable** - Clean separation between test layers
-- **Scalable** - Easy to add new endpoints and scenarios  
-- **Reliable** - Isolated database state prevents flaky tests
-- **Fast** - Optimized Spring context reuse
-- **Readable** - Business-friendly Gherkin scenarios
-- **Comprehensive** - Tests full request/response cycle
+1. **Maintainable Test Suite**
+   - Adding new scenarios is straightforward
+   - Step definitions are organized by domain
+   - Common patterns are abstracted
+2. **Clean Separation of Concerns**
+    - Feature files describe business requirements
+    - Step definitions implement test logic
+    - Base class handles technical HTTP details
+    - Scalable components
+3. **Reliable**
+   - Isolated database state prevents flaky tests
+4. **Reusable Components**
+    - HTTP client functionality is centralized
+    - Common assertions are abstracted
+    - Setup code is shared across scenarios
+    - Fast feedback loop with Testcontainers
+5. **Readable**
+   - Business-friendly Gherkin scenarios
+6. **Realistic Testing Environment**
+    - Tests run against a full Spring context
+    - Database interactions use real PostgreSQL
+    - HTTP requests hit actual endpoints
 
-## 🚦 Getting Started
+## 🚦 Conclusion
+This Cucumber integration testing architecture provides a powerful and solid foundation for BDD-style integration testing in a Spring Boot. By combining the readability of Gherkin with the power of Spring's testing framework and the isolation of Testcontainers, you can build a comprehensive, maintainable test suite that validates your application's behavior from end to end.
 
-1. **Add Dependencies** - Cucumber, Spring Boot Test, Testcontainers
-2. **Configure Annotation** - Use `@CucumberTestConfig`  
-3. **Write Features** - Create `.feature` files in `src/test/resources/features/`
-4. **Implement Steps** - Extend `CucumberBase` for HTTP utilities
-5. **Run Tests** - Execute via Gradle or IDE
+The approach demonstrated here ensures that your tests:
+- Are readable by all stakeholders
+- Provide living documentation
+- Test realistic scenarios
+- Maintain isolation between test runs
+- Can be extended to cover new features
 
-This setup provides a solid foundation for BDD-style integration testing in Spring Boot Kotlin applications, ensuring your authentication flows and API contracts are thoroughly validated with maintainable, readable tests.
+By adopting these patterns, you can build confidence in your application's behavior while creating a valuable resource for understanding its requirements and functionality.
+
+## 🔗 Additional Resources
+
+- [Cucumber Documentation](https://cucumber.io/docs/cucumber/)
+- [Spring Boot Testing Guide](https://docs.spring.io/spring-boot/docs/current/reference/html/features.html#features.testing)
+- [Testcontainers for Java](https://www.testcontainers.org/)
+- [JUnit 5 User Guide](https://junit.org/junit5/docs/current/user-guide/)
