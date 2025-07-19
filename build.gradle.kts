@@ -10,6 +10,7 @@ group = "com.github.senocak.boilerplate"
 version = "0.0.1"
 
 java {
+    sourceCompatibility = JavaVersion.VERSION_21
     toolchain {
         languageVersion = JavaLanguageVersion.of(21)
     }
@@ -17,6 +18,14 @@ java {
 
 repositories {
     mavenCentral()
+}
+
+springBoot {
+    buildInfo {
+        properties {
+            this.name = "Spring Kotlin Boilerplate Application"
+        }
+    }
 }
 
 val jjwt = "0.12.6"
@@ -55,6 +64,11 @@ dependencies {
     testImplementation("org.testcontainers:testcontainers:$testcontainers")
     testImplementation("org.testcontainers:junit-jupiter:$testcontainers")
     testImplementation("org.testcontainers:postgresql:$testcontainers")
+
+    testImplementation("org.junit.platform:junit-platform-suite")
+    testImplementation("io.cucumber:cucumber-java:7.23.0")
+    testImplementation("io.cucumber:cucumber-junit-platform-engine:7.23.0")
+    testImplementation("io.cucumber:cucumber-spring:7.23.0")
 }
 
 kotlin {
@@ -71,6 +85,7 @@ allOpen {
 
 tasks.withType<Test> {
     useJUnitPlatform()
+    systemProperty("cucumber.junit-platform.naming-strategy", "long")
     maxHeapSize = "1G"
     if (project.hasProperty("skipTests")) {
         val skipTestsValue: List<String> = project.property("skipTests")

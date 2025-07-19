@@ -1,6 +1,7 @@
 package com.github.senocak.boilerplate.config
 
 import com.github.senocak.boilerplate.controller.AuthController
+import com.github.senocak.boilerplate.controller.PublicController
 import com.github.senocak.boilerplate.controller.UserController
 import com.github.senocak.boilerplate.security.JwtAuthenticationEntryPoint
 import com.github.senocak.boilerplate.security.JwtAuthenticationFilter
@@ -27,7 +28,7 @@ class WebSecurityConfig(
      * @throws Exception -- throws Exception
      */
     @Bean
-    @Profile("!integration-test")
+    @Profile(value = ["!integration-test", "!cucumber-test"])
     fun securityFilterChainDSL(http: HttpSecurity, @Value("\${springdoc.api-docs.path}") path: String): SecurityFilterChain =
         http {
             csrf { disable() }
@@ -36,6 +37,7 @@ class WebSecurityConfig(
             authorizeHttpRequests {
                 authorize(pattern = "${AuthController.URL}/**", access = permitAll)
                 authorize(pattern = "${UserController.URL}/**", access = permitAll)
+                authorize(pattern = "${PublicController.URL}/**", access = permitAll)
                 authorize(pattern = "/actuator/**", access = permitAll)
                 authorize(pattern = "$path/**", access = permitAll)
                 authorize(pattern = "/swagger**/**", access = permitAll)
