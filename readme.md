@@ -1,8 +1,8 @@
-# 🥒 Cucumber Integration Testing in Spring Boot Kotlin JWT Application
+# 🥒Cucumber Integration Testing in Spring Boot Kotlin JWT Application
 
 This guide demonstrates how to implement robust Behavior-Driven Development (BDD) integration tests using Cucumber in a Spring Boot Kotlin application with JWT authentication. The setup leverages Testcontainers for database isolation and provides a clean, maintainable testing architecture.
 
-## 🎯 Why Cucumber for Integration Testing?
+## 🎯Why Cucumber for Integration Testing?
 
 Cucumber enables writing human-readable feature specifications that directly map to automated tests. This approach:
 
@@ -11,7 +11,7 @@ Cucumber enables writing human-readable feature specifications that directly map
 - **Provides living documentation** that stays in sync with code
 - **Enables BDD workflows** for better collaboration
 
-## 🏗️ Project Structure
+## 🏗️Project Structure
 
 ```
 src/test/
@@ -29,11 +29,11 @@ src/test/
 │       └── Auth.feature                   # Gherkin feature files
 ```
 
-## 💡 How It Works: Complete End-to-End Example
+## 💡How It Works: Complete End-to-End Example
 
 Let's walk through the complete flow of how Cucumber integration testing works in this project:
 
-### 1️⃣ Writing Feature Files
+### 1️⃣Writing Feature Files
 Feature files are written in Gherkin syntax to describe test scenarios in plain English. This makes them readable by non-technical stakeholders while providing structure for test automation. They are stored in `src/test/resources/features/`:
 
 ```gherkin
@@ -48,7 +48,7 @@ This feature file describes a scenario where:
 2. We expect a 200 OK response
 3. The response should contain a JWT token
 
-### 2️⃣ Setting Up the Test Infrastructure
+### 2️⃣Setting Up the Test Infrastructure
 
 #### Cucumber Test Configuration
 
@@ -118,7 +118,7 @@ This provides:
 - Isolation from development or production environments
 - Execution of migration scripts for schema and test data
 
-### 3️⃣ Building the Testing Foundation
+### 3️⃣Building the Testing Foundation
 
 #### Base Class (`CucumberBase.kt`)
 
@@ -226,13 +226,7 @@ This class:
 - Reads the response body into a string
 - Optionally casts the response to a specific class for type-safe assertions
 
-#### Key Benefits of This Approach:
-- **Readable scenarios** that non-technical team members can understand
-- **Parameterized steps** for flexible test data
-- **Response validation** with type casting
-- **Field-level assertions** on JSON responses
-
-### 4️⃣ Implementing Step Definitions
+### 4️⃣Implementing Step Definitions
 
 Step definitions connect the Gherkin language in feature files to executable Kotlin code:
 
@@ -274,7 +268,7 @@ Key aspects of step definitions:
 - **Assertions** validate response codes and content
 - **Type-safe casting** for response objects
 
-### 5️⃣ Test Execution Flow Visualization
+### 5️⃣Test Execution Flow Visualization
 Here's a diagram illustrating the flow of test execution:
 
 ```
@@ -291,7 +285,7 @@ Here's a diagram illustrating the flow of test execution:
 └────────────────┘     └─────────────────┘     └───────────────────┘
 ```
 
-#### 🔧 Gradle Setup for Testing
+#### 🔧Gradle Setup for Testing
 The `build.gradle.kts` file includes specific configurations for running Cucumber tests:
 
 ```kotlin
@@ -321,11 +315,11 @@ tasks.register<Test>(name = "integrationTest") {
 
 Key configuration elements:
 - **Cucumber dependencies** for BDD testing
-- **JUnit platform** integration
+- **JUnit platform** for integration
 - **Testcontainers** for database isolation
 - **Task configuration** for specific test types
 
-#### 🧪 Command Line Execution
+#### 🧪Command Line Execution
 
 ```bash
 # Run all tests including Cucumber
@@ -364,7 +358,7 @@ Key configuration elements:
    )
    ```
 
-## 🔍 Execution Flow
+## 🔍Execution Flow
 
 1. **Container Startup** - PostgreSQL container initializes
 2. **Spring Context** - Application starts with random port  
@@ -373,7 +367,7 @@ Key configuration elements:
 5. **Response Validation** - JSON responses are verified
 6. **Cleanup** - Container and context shutdown
 
-## 🎯 Best Practices Demonstrated
+## 🎯Best Practices Demonstrated
 
 ### 1. **Separation of Concerns**
 - Base class handles HTTP mechanics
@@ -400,7 +394,7 @@ Key configuration elements:
 - Flyway disabled for faster startup
 - Environment-specific properties
 
-## 🎉 Benefits of This Architecture
+## 🎉Benefits of This Architecture
 
 1. **Maintainable Test Suite**
    - Adding new scenarios is straightforward
@@ -425,7 +419,7 @@ Key configuration elements:
     - Database interactions use real PostgreSQL
     - HTTP requests hit actual endpoints
 
-## 🚦 Conclusion
+## 🚦Conclusion
 This Cucumber integration testing architecture provides a powerful and solid foundation for BDD-style integration testing in a Spring Boot. By combining the readability of Gherkin with the power of Spring's testing framework and the isolation of Testcontainers, you can build a comprehensive, maintainable test suite that validates your application's behavior from end to end.
 
 The approach demonstrated here ensures that your tests:
@@ -437,12 +431,12 @@ The approach demonstrated here ensures that your tests:
 
 By adopting these patterns, you can build confidence in your application's behavior while creating a valuable resource for understanding its requirements and functionality.
 
-## 🖥️ Demo
+## 🖥️Demo
 This guide demonstrates how to implement robust Behavior-Driven Development (BDD) integration tests using Cucumber in a Spring Boot. The setup leverages Testcontainers for database isolation and provides a clean, maintainable testing architecture.
 
 > 📌 **GitHub Repository**: [https://github.com/senocak/Spring-Kotlin-Jwt-BDD](https://github.com/senocak/Spring-Kotlin-Jwt-BDD)
 
-## 🔮 What's Next?
+## 🔮What's Next?
 
 Now that you have a solid foundation for Cucumber integration testing with Spring Boot, here are some ways to enhance your testing suite:
 
@@ -488,7 +482,7 @@ Now that you have a solid foundation for Cucumber integration testing with Sprin
   ```
 
 - Integrate with test reporting tools like Allure:
-  ```groovy
+  ```kotlin
   dependencies {
       // existing dependencies...
       testImplementation("io.qameta.allure:allure-cucumber7-jvm:2.24.0")
@@ -557,7 +551,7 @@ Now that you have a solid foundation for Cucumber integration testing with Sprin
 
 By implementing these enhancements, you'll create an even more robust and maintainable testing framework that scales with your application's complexity.
 
-## 🔗 Additional Resources
+## 🔗Additional Resources
 
 - [Cucumber Documentation](https://cucumber.io/docs/cucumber/)
 - [Spring Boot Testing Guide](https://docs.spring.io/spring-boot/docs/current/reference/html/features.html#features.testing)
