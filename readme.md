@@ -437,6 +437,126 @@ The approach demonstrated here ensures that your tests:
 
 By adopting these patterns, you can build confidence in your application's behavior while creating a valuable resource for understanding its requirements and functionality.
 
+## 🖥️ Demo
+This guide demonstrates how to implement robust Behavior-Driven Development (BDD) integration tests using Cucumber in a Spring Boot. The setup leverages Testcontainers for database isolation and provides a clean, maintainable testing architecture.
+
+> 📌 **GitHub Repository**: [https://github.com/senocak/Spring-Kotlin-Jwt-BDD](https://github.com/senocak/Spring-Kotlin-Jwt-BDD)
+
+## 🔮 What's Next?
+
+Now that you have a solid foundation for Cucumber integration testing with Spring Boot, here are some ways to enhance your testing suite:
+
+### 1. **Expand Test Coverage**
+- Add feature files for other endpoints in your API
+- Test edge cases and error scenarios
+- Create scenarios for complex business workflows
+
+### 2. **Advanced Cucumber Features**
+- Use **Scenario Outlines** for data-driven testing:
+  ```gherkin
+  Scenario Outline: Login with various credentials
+    When the client calls "/login" with username "<username>" and password "<password>"
+    Then the client receives status code of <statusCode>
+    
+    Examples:
+      | username      | password   | statusCode |
+      | validUser     | validPass  | 200        |
+      | invalidUser   | validPass  | 401        |
+      | validUser     | wrongPass  | 401        |
+  ```
+
+- Add **Background** steps for common setup:
+  ```gherkin
+  Feature: User management
+    
+    Background:
+      Given the database contains a user with username "admin"
+      
+    Scenario: Get user details
+      When the client authenticates as "admin"
+      And the client calls "/users/me"
+      Then the client receives status code of 200
+  ```
+
+### 3. **Enhance Reporting**
+- Add Cucumber HTML reports:
+  ```kotlin
+  @ConfigurationParameter(
+      key = PLUGIN_PROPERTY_NAME, 
+      value = "pretty, html:build/reports/cucumber/report.html"
+  )
+  ```
+
+- Integrate with test reporting tools like Allure:
+  ```groovy
+  dependencies {
+      // existing dependencies...
+      testImplementation("io.qameta.allure:allure-cucumber7-jvm:2.24.0")
+  }
+  ```
+
+### 4. **Parallel Test Execution**
+- Configure Cucumber for parallel execution:
+  ```kotlin
+  @ConfigurationParameter(
+      key = "cucumber.execution.parallel.enabled",
+      value = "true"
+  )
+  @ConfigurationParameter(
+      key = "cucumber.execution.parallel.config.strategy",
+      value = "dynamic"
+  )
+  ```
+
+### 5. **CI/CD Integration**
+- Add GitHub Actions workflow for automated testing:
+  ```yaml
+  name: Cucumber Tests
+  
+  on: [push, pull_request]
+  
+  jobs:
+    test:
+      runs-on: ubuntu-latest
+      steps:
+        - uses: actions/checkout@v3
+        - name: Set up JDK 17
+          uses: actions/setup-java@v3
+          with:
+            java-version: '17'
+            distribution: 'temurin'
+        - name: Run tests
+          run: ./gradlew integrationTest
+        - name: Publish Test Report
+          uses: mikepenz/action-junit-report@v3
+          if: always()
+          with:
+            report_paths: 'build/test-results/test/TEST-*.xml'
+  ```
+
+### 6. **Custom Step Libraries**
+- Create domain-specific step libraries for different parts of your application:
+  ```kotlin
+  class UserManagementSteps: CucumberBase() {
+      // User-specific step definitions
+  }
+  
+  class PaymentSteps: CucumberBase() {
+      // Payment-specific step definitions
+  }
+  ```
+
+### 7. **Visual Testing Integration**
+- Add screenshot capture for UI tests:
+  ```kotlin
+  @Then("take screenshot")
+  fun takeScreenshot() {
+      // Screenshot logic for Selenium or similar
+  }
+  ```
+
+By implementing these enhancements, you'll create an even more robust and maintainable testing framework that scales with your application's complexity.
+
 ## 🔗 Additional Resources
 
 - [Cucumber Documentation](https://cucumber.io/docs/cucumber/)
